@@ -1,0 +1,41 @@
+==========================================
+Benchmarking: Normal Router
+==========================================
+Waiting for server to start...
+Server ready!
+Running 30s test @ http://127.0.0.1:8080/time
+  4 threads and 100 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency   500.04us   41.61us   3.73ms   83.56%
+    Req/Sec    47.95k   694.20    48.87k    96.84%
+  Latency Distribution
+     50%  499.00us
+     75%  518.00us
+     90%  538.00us
+     99%  580.00us
+  5744542 requests in 30.10s, 745.07MB read
+Requests/sec: 190844.10
+Transfer/sec:     24.75MB
+
+==========================================
+Benchmarking: Hot-Swappable Router
+==========================================
+Waiting for server to start...
+Server ready!
+Running 30s test @ http://127.0.0.1:8080/time
+  4 threads and 100 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency   496.80us   45.63us   4.20ms   83.55%
+    Req/Sec    48.00k   762.91    49.02k    98.42%
+  Latency Distribution
+     50%  496.00us
+     75%  517.00us
+     90%  538.00us
+     99%  587.00us
+  5750594 requests in 30.10s, 745.85MB read
+Requests/sec: 191047.71
+Transfer/sec:     24.78MB
+
+==========================================
+Benchmark Complete
+==========================================

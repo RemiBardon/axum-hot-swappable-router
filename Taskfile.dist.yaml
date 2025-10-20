@@ -1,0 +1,22 @@
+# See <https://taskfile.dev/usage> and <https://taskfile.dev/reference/schema>
+# to find all keys and their usage.
+version: "3"
+
+silent: true
+
+tasks:
+  lint:
+    desc: Lint the whole project.
+    deps: [rust:lint]
+
+  bench:
+    desc: Lints all Rust files.
+    cmd: ./benchmarks/run-benchmarks
+
+  rust:lint:
+    desc: Lints all Rust files.
+    internal: true
+    cmd: cargo fmt --check
+
+  test:examples:
+    cmd: ./examples/*/run-tests

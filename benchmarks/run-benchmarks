@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+
+set -eu
+
+# Test if required tools are installed.
+if ! command -v wrk &> /dev/null; then
+	echo '`wrk` is required.'
+	echo 'On macOS, you can install it using `brew install wrk`.'
+	exit 2
+fi
+
+DURATION=30s
+THREADS=4
+CONNECTIONS=100
+PORT=8080
+URL="http://127.0.0.1:${PORT:?}/time"
+BENCHMARKS_PACKAGE_NAME=axum-hot-swappable-router-benchmarks
+
+echo 'Building test binaries…'
+cargo build --release -p "${BENCHMARKS_PACKAGE_NAME:?}" --bin axum-normal-router --locked
+cargo build --release -p "${BENCHMARKS_PACKAGE_NAME:?}" --bin axum-hot-swappable-router --locked
+
+benchmark() {
+	local binary=${1:?} name=${2:?}
+
+	echo ''
+	echo '=========================================='
+	echo "Benchmarking: ${name}"
+	echo '=========================================='
+
+	# Start server.
+	./target/release/${binary:?} &
+	SERVER_PID=$!
+
+	# Wait for server to be ready.
+	echo 'Waiting for server to start…'
+	for i in {1..10}; do
+		if curl -sk "${URL:?}" >/dev/null 2>&1; then
+			echo 'Server ready!'
+			break
+		fi
+		sleep 0.1
+	done
+
+	# Give it a moment to stabilize.
+	sleep 1
+
+	# Run benchmark.
+	wrk -t$THREADS -c$CONNECTIONS -d$DURATION --latency "${URL:?}"
+
+	# Stop server.
+	kill $SERVER_PID
+	wait $SERVER_PID 2>/dev/null || :
+
+	# Cool down between benchmarks.
+	sleep 2
+}
+
+# Ensure no other program listens on 8080.
+if lsof -iTCP:"${PORT:?}" -sTCP:LISTEN >/dev/null; then
+	echo "PID $(lsof -iTCP:"${PORT:?}" -sTCP:LISTEN -t) is already listening on port ${PORT:?}."
+	exit 3
+fi
+
+benchmark axum-normal-router 'Normal Router'
+benchmark axum-hot-swappable-router 'Hot-Swappable Router'
+
+echo ''
+echo '=========================================='
+echo 'Benchmark Complete'
+echo '=========================================='

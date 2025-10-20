@@ -1,0 +1,101 @@
+#!/usr/bin/env bash
+
+set -eu
+set -o pipefail
+
+BINARY='./target/release/axum-hot-swappable-router-example-restart-dependency'
+LOG_FILE="$(mktemp)"
+TMP_PID_FILE="$(mktemp)"
+trap '[[ -f "$TMP_PID_FILE" ]] && kill "$(cat "$TMP_PID_FILE")" 2>/dev/null || true' EXIT
+
+cargo build --release --locked \
+  -p axum-hot-swappable-router-example-restart-dependency \
+  --bin axum-hot-swappable-router-example-restart-dependency
+
+abort() {
+  print_logs
+  exit 1
+}
+
+print_logs() {
+  printf '\n'
+  echo '========== Logs =========='
+  cat "${LOG_FILE:?}"
+  rm "${LOG_FILE:?}"
+  echo '=========================='
+  printf '\n'
+}
+
+start_server() {
+  echo 'Starting API server…'
+  $BINARY >"$LOG_FILE" 2>&1 &
+  echo $! > "$TMP_PID_FILE"
+
+  # Wait for health endpoint to be ready
+  for _ in {1..10}; do
+    if xh :8080/health -q 2>/dev/null; then
+      echo 'Server is up.'
+      return
+    fi
+    sleep 0.1
+  done
+  echo 'Server failed to start.'
+  abort
+}
+
+check_status() {
+  local expected_status="${1:?}"
+  shift 1
+
+  echo "$@"
+
+  local res="$(xh --no-check-status "$@" -v --pretty all)"
+  local status="$(echo "$res" | perl -pe 's/\e\[[0-9;]*m//g' | grep '^HTTP/1.1' | cut -d' ' -f2)"
+  if ! [[ "${status:?}" == "${expected_status:?}" ]]; then
+    echo "$res"
+    echo "Expected ${expected_status:?}."
+    abort
+  fi
+}
+
+start_server
+
+printf '\n'
+echo 'Test initial status code:'
+check_status 200 GET :8080/health
+check_status 200 GET :8080/users
+
+printf '\n'
+echo 'Test status code after failed reload:'
+check_status 500 POST :8080/reload
+check_status 500 GET :8080/health
+check_status 500 GET :8080/users
+
+printf '\n'
+echo 'Test status code after successful reload:'
+check_status 200 POST :8080/reload
+check_status 200 GET :8080/health
+check_status 200 GET :8080/users
+
+printf '\n'
+echo 'Test status code after successful restart:'
+check_status 200 POST :8080/restart-dependency
+check_status 200 GET :8080/health
+check_status 200 GET :8080/users
+
+printf '\n'
+echo 'Test status code after failed restart:'
+check_status 503 POST :8080/restart-dependency failing==true
+check_status 503 GET :8080/health
+check_status 503 GET :8080/users
+check_status 503 POST :8080/reload
+
+printf '\n'
+echo 'Test status code during restart:'
+xh POST :8080/restart-dependency -q &
+check_status 503 GET :8080/health
+sleep 3.1
+check_status 200 GET :8080/health
+
+printf '\n'
+echo 'All integration tests passed.'

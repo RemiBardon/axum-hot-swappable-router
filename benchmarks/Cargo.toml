@@ -1,0 +1,26 @@
+[package]
+name = "axum-hot-swappable-router-benchmarks"
+version = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+authors = ["Rémi Bardon <remi@remibardon.name>"]
+publish = false
+
+[dependencies]
+axum-hot-swappable-router = { path = "..", default-features = false }
+axum = { version = "=0.8.6", default-features = false, features = ["tokio", "http1"] }
+tokio = { version = "=1.48.0", default-features = false, features = ["rt-multi-thread", "time"] }
+
+[[bin]]
+name = "axum-hot-swappable-router"
+path = "src/hot-swappable.rs"
+test = false
+bench = false
+doc = false
+
+[[bin]]
+name = "axum-normal-router"
+path = "src/normal.rs"
+test = false
+bench = false
+doc = false

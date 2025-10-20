@@ -1,0 +1,43 @@
+[workspace]
+members = [".", "benchmarks", "examples/*"]
+
+[workspace.package]
+version = "0.1.0"
+license = "Apache-2.0"
+edition = "2021"
+rust-version = "1.78"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+rust_2018_idioms = { level = "warn", priority = -1 }
+missing_debug_implementations = "warn"
+missing_docs = "warn"
+unreachable_pub = "warn"
+
+[package]
+name = "axum-hot-swappable-router"
+description = "An Axum router that can be replaced at runtime"
+version = { workspace = true }
+edition = { workspace = true }
+# rust-version = { workspace = true }
+license = { workspace = true }
+authors = ["Rémi Bardon <remi@remibardon.name>"]
+keywords = ["axum", "http", "web"]
+# NOTE: Reused from `axum`.
+categories = ["asynchronous", "network-programming", "web-programming::http-server"]
+readme = "README.md"
+repository = "https://github.com/RemiBardon/axum-hot-swappable-router.git"
+
+[lib]
+test = false
+bench = false
+doc = true
+doctest = true
+
+[dependencies]
+arc-swap = { version = "1", default-features = false }
+axum = { version = "0.8", default-features = false }
+tower = { version = "0.5", default-features = false }
+
+[badges]
+maintenance = { status = "passively-maintained" }

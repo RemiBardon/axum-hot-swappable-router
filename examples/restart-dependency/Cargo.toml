@@ -1,0 +1,23 @@
+[package]
+name = "axum-hot-swappable-router-example-restart-dependency"
+version = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+authors = ["Rémi Bardon <remi@remibardon.name>"]
+publish = false
+
+[dependencies]
+axum = { version = "=0.8.6", default-features = false, features = ["tokio", "http1", "json", "query"] }
+axum-hot-swappable-router = { path = "../..", default-features = false }
+serde = { version = "=1.0.228", default-features = false, features = ["derive"] }
+serde_json = { version = "=1.0.145", default-features = false }
+serde_with = { version = "=3.15.0", default-features = false, features = ["macros"] }
+strum = { version = "=0.27.2", default-features = false, features = ["derive", "std"] }
+tokio = { version = "=1.48.0", default-features = false, features = ["rt-multi-thread", "time"] }
+toml = { version = "=0.9.8", default-features = false, features = ["parse", "serde"] }
+
+[[bin]]
+name = "axum-hot-swappable-router-example-restart-dependency"
+test = false
+bench = false
+doc = false
